@@ -30,13 +30,21 @@ function leerArchivoCSV($archivoCSV) {
 
 function getFilaPosGansuno(){
     if (isset($_GET['fila'])) {
-        return $_GET['fila'];
+        if($_GET['fila'] >= 0 && $_GET['fila'] <= 12){
+            return $_GET['fila'];
+        }else{
+            echo "Posición inválida fila (0-12)";
+        }
     }
 }
 
 function getColumnaPosGansuno(){
     if (isset($_GET['columna'])) {
-        return $_GET['columna'];
+        if($_GET['columna'] >= 0 && $_GET['columna'] <= 12){
+            return $_GET['columna'];
+        }else{
+            echo "Posición inválida columna (0-12)";
+        }
     }
 }
 
@@ -127,6 +135,12 @@ $tableroMarkup = getTableroMarkup($tablero, $posGansuno);
     <h1>Tablero juego super rol DWES</h1>
     <div class="contenedorTablero">
         <?php echo $tableroMarkup; ?>
+    </div>
+    <div>
+        <?php $posFilaGansuno?>
+    </div>
+        <div>
+        <?php $posColumnaGansuno?>
     </div>
 </body>
 </html>
