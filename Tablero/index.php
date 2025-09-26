@@ -24,9 +24,24 @@ function leerArchivoCSV($archivoCSV) {
     return $tablero;
 }
 
-function getPosGansuno(){
-    return random_int(0,144);
+//function getPosGansuno(){
+//    return random_int(0,144);
+//}
+
+function getFilaPosGansuno(){
+    if (isset($_GET['fila'])) {
+        return $_GET['fila'];
+    }
 }
+
+function getColumnaPosGansuno(){
+    if (isset($_GET['columna'])) {
+        return $_GET['columna'];
+    }
+}
+
+
+
     
 //Función lógica presentación
 function getTableroMarkup ($tablero, $posGansuno){
@@ -59,7 +74,9 @@ function getTableroMarkup ($tablero, $posGansuno){
 
 
 $tablero = leerArchivoCSV('contenido_tablero/contenido.csv');
-$posGansuno = getPosGansuno();
+$posFilaGansuno = getFilaPosGansuno();
+$posColumnaGansuno = getColumnaPosGansuno();
+$posGansuno = (($posFilaGansuno*12-12) + ($posColumnaGansuno));
 
 //Lógica de presentación
 $tableroMarkup = getTableroMarkup($tablero, $posGansuno);
