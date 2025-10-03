@@ -1,20 +1,69 @@
 <?php
 
-/* Inicialización del entorno */
+/***** Inicialización del entorno ******/
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+
 /* Zona de declaración de funciones */
-//Funciones de debugueo
+//*******Funciones de debugueo****
 function dump($var){
     echo '<pre>'.print_r($var,1).'</pre>';
 }
-//Funciones lógica de negocio
-function leerArchivoCSV($archivoCSV) {
+
+//*******Función lógica presentación**********+
+function getTableroMarkup ($tablero, $posPersonaje){
+    $output = '';
+    foreach ($tablero as $filaIndex => $datosFila) {
+        foreach ($datosFila as $columnaIndex => $tileType) {
+            if(isset($posPersonaje)&&($filaIndex == $posPersonaje['row'])&&($columnaIndex == $posPersonaje['col'])){
+                $output .= '<div class = "tile ' . $tileType . '"><img src="pesitas.png"></div>';    
+            }else{
+                $output .= '<div class = "tile ' . $tileType . '"></div>';
+            }
+        }
+    }
+    return $output;
+}
+
+function getMensajeMarkup ($arrayMensajes){
+    $output = ' ';
+
+    foreach ($arrayMensajes as $mensaje){
+        $output .= '<p>' .$mensaje. '</p>';
+    }
+
+    return $output;
+
+}
+
+function getArrowsMarkup($posPersonaje){
+    $arriba = "?row=". ($posPersonaje["row"]-1) . "&col=" . ($posPersonaje["col"]);
+    $abajo = "?row=". ($posPersonaje["row"]+1) . "&col=" . ($posPersonaje["col"]);
+    $derecha = "?row=". ($posPersonaje["row"]) . "&col=" . ($posPersonaje["col"]+1);
+    $izquierda = "?row=". ($posPersonaje["row"]) . "&col=" . ($posPersonaje["col"]-1);
+    
+$output = '
+        <a href="' . $arriba . '"><button>Arriba</button></a><br>
+        <a href="' . $abajo . '"><button>Abajo</button></a><br>
+        <a href="' . $derecha . '"><button>Derecha</button></a><br>
+        <a href="' . $izquierda . '"><button>Izquierda</button></a>
+    ';
+    
+    return $output;
+}
+
+//******+Función Lógica de negocio************
+//El tablero es un array bidimensional en el que cada fila contiene 12 palabras cuyos valores pueden ser:
+// agua
+//fuego
+//tierra
+// hierba
+function leerArchivoCSV($rutaArchivoCSV) {
     $tablero = [];
 
-    if (($puntero = fopen($archivoCSV, "r")) !== FALSE) {
+    if (($puntero = fopen($rutaArchivoCSV, "r")) !== FALSE) {
         while (($datosFila = fgetcsv($puntero)) !== FALSE) {
             $tablero[] = $datosFila;
         }
@@ -23,71 +72,44 @@ function leerArchivoCSV($archivoCSV) {
 
     return $tablero;
 }
-
-//function getPosGansuno(){
-//    return random_int(0,144);
-//}
-
-function getFilaPosGansuno(){
-    if (isset($_GET['fila'])) {
-        if($_GET['fila'] >= 0 && $_GET['fila'] <= 12){
-            return $_GET['fila'];
-        }else{
-            echo "Posición inválida fila (0-12)";
-        }
-    }
-}
-
-function getColumnaPosGansuno(){
-    if (isset($_GET['columna'])) {
-        if($_GET['columna'] >= 0 && $_GET['columna'] <= 12){
-            return $_GET['columna'];
-        }else{
-            echo "Posición inválida columna (0-12)";
-        }
-    }
-}
-
-
-
+function leerInput(){
     
-//Función lógica presentación
-function getTableroMarkup ($tablero, $posGansuno){
-    $contador = 0;
-    $output = '';
-    
-    foreach ($tablero as $filaIndex => $datosFila) {
-        foreach ($datosFila as $columnaIndex => $tileType) {
-            
-            $contador++;
-            //Si tengo que pintar aquí al gansuno...
-            if($contador == $posGansuno){      
-                $output .= '<div class = "tile ' . $tileType . '"> <img src="pesitas.png" style= "width: 50px; height: 50px;"/></div>';
-            }else{
-                //Si no tengo que pintar al gansuno...
-                $output .= '<div class = "tile ' . $tileType . '"></div>';
-            }
-        }
-    }
+    $col = filter_input(INPUT_GET, 'col', FILTER_VALIDATE_INT);
+    $row = filter_input(INPUT_GET, 'row', FILTER_VALIDATE_INT);
 
-    return $output;
+   
+    return (isset($col) && is_numeric($col) && isset($row) && is_numeric($row))? array(
+            'row' => $row,
+            'col' => $col
+        ) : null;    
+
 
 }
-//Lógica de negocio
-//El tablero es un array bidimensional en el que cada fila contiene 12 palabras cuyos valores pueden ser:
-// agua
-//fuego
-//tierra
-// hierba
+
+function getMensaje ($posPersonaje){
+
+    if (!isset($posPersonaje)){
+        return array('La posición del personaje no está bien definida');
+    }
+
+    return array(' ');
+}
+//*****Lógica de negocio***********
+//Extracción de las variables de la petición
 
 
+$posPersonaje = leerInput();
+
+// dump('$posPersonaje');
+// dump($posPersonaje);
 $tablero = leerArchivoCSV('contenido_tablero/contenido.csv');
-$posFilaGansuno = getFilaPosGansuno();
-$posColumnaGansuno = getColumnaPosGansuno();
-$posGansuno = (($posFilaGansuno*12-12) + ($posColumnaGansuno));
+$mensaje = getMensaje($posPersonaje);
 
-//Lógica de presentación
-$tableroMarkup = getTableroMarkup($tablero, $posGansuno);
+
+
+//*****+++Lógica de presentación*******
+$tableroMarkup = getTableroMarkup($tablero, $posPersonaje);
+$mensajesUsuarioMarkup = getMensajeMarkup ($mensaje);
 
 
 ?>
@@ -96,38 +118,47 @@ $tableroMarkup = getTableroMarkup($tablero, $posGansuno);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tablero</title>
+    <!-- Minified version -->
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+    <title>Document</title>
     <style>
         .contenedorTablero {
-            width: 600px;
-            height: 600px;
-            border-radius: 5px;
+            width:600px;
+            height:600px;
             border: solid 2px grey;
             box-shadow: grey;
+            display:grid;
             grid-template-columns: repeat(12, 1fr);
             grid-template-rows: repeat(12, 1fr);
         }
         .tile {
-            width: 50px;
-            height: 50px;
             float: left;
             margin: 0;
             padding: 0;
             border-width: 0;
+            background-image: url("./464.jpg");
             background-size: 209px;
-            background-image: url('464.jpg');
+            background-repeat: none;
+            overflow: hidden;
+        }
+        .tile img{
+            max-width:100%;
         }
         .fuego {
-            background-position: 104px -52px;
+            background-color: red;
+            background-position: -105px -52px;
         }
         .tierra {
-            background-position: 104px -156px;
+            background-color: brown;
+            background-position: -157px 0px;
         }
         .agua {
-            background-position: -52px 0px;
+            background-color: blue;
+            background-position: -53px 0px;
         }
         .hierba {
-            background-position: -52px 52px;
+            background-color: green;
+            background-position: 0px 0px;
         }
     </style>
 </head>
@@ -136,11 +167,13 @@ $tableroMarkup = getTableroMarkup($tablero, $posGansuno);
     <div class="contenedorTablero">
         <?php echo $tableroMarkup; ?>
     </div>
+    <br>
     <div>
-        <?php $posFilaGansuno?>
+        <?php echo $mensajesUsuarioMarkup; ?>
     </div>
         <div>
-        <?php $posColumnaGansuno?>
+        <?php echo getArrowsMarkup($posPersonaje); ?>
     </div>
+
 </body>
 </html>
